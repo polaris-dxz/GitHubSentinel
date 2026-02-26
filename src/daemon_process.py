@@ -8,6 +8,7 @@ from datetime import datetime  # 导入 datetime 模块用于获取当前日期
 from config import Config  # 导入配置管理类
 from github_client import GitHubClient  # 导入GitHub客户端类，处理GitHub API请求
 from hacker_news_client import HackerNewsClient
+from custom_site_client import CustomSiteClient
 from notifier import Notifier  # 导入通知器类，用于发送通知
 from report_generator import ReportGenerator  # 导入报告生成器类
 from llm import LLM  # 导入语言模型类，可能用于生成报告内容
@@ -52,6 +53,24 @@ def hn_daily_job(hacker_news_client, report_generator, notifier):
     LOG.info(f"[定时任务执行完毕]")
 
 
+def custom_site_job(custom_site_client, report_generator, notifier, site_names):
+    LOG.info("[开始执行定时任务]自定义站点信息整理")
+    for site_name in site_names:
+        if not custom_site_client.has_site(site_name):
+            LOG.warning("站点 {} 未注册，已跳过。", site_name)
+            continue
+        markdown_file_path = custom_site_client.export_site_items(site_name)
+        if not markdown_file_path:
+            LOG.warning("站点 {} 未抓取到可用内容，跳过报告生成。", site_name)
+            continue
+        try:
+            report, _ = report_generator.generate_custom_site_report(markdown_file_path, site_name)
+            notifier.notify_custom_site_report(site_name, report)
+        except Exception as exc:
+            LOG.error("站点 {} 报告生成失败：{}", site_name, str(exc))
+    LOG.info("[定时任务执行完毕]")
+
+
 def main():
     # 设置信号处理器
     signal.signal(signal.SIGTERM, graceful_shutdown)
@@ -59,6 +78,7 @@ def main():
     config = Config()  # 创建配置实例
     github_client = GitHubClient(config.github_token)  # 创建GitHub客户端实例
     hacker_news_client = HackerNewsClient() # 创建 Hacker News 客户端实例
+    custom_site_client = CustomSiteClient()  # 创建自定义站点客户端实例
     notifier = Notifier(config.email)  # 创建通知器实例
     llm = LLM(config)  # 创建语言模型实例
     report_generator = ReportGenerator(llm, config.report_types)  # 创建报告生成器实例
@@ -78,6 +98,11 @@ def main():
 
     # 安排 hn_daily_job 每天早上10点执行一次
     schedule.every().day.at("10:00").do(hn_daily_job, hacker_news_client, report_generator, notifier)
+
+    # 安排 custom_site_job 定时执行
+    schedule.every(config.custom_sites_interval_hours).hours.at(":15").do(
+        custom_site_job, custom_site_client, report_generator, notifier, config.custom_sites
+    )
 
     try:
         # 在守护进程中持续运行

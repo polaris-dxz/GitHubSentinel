@@ -28,6 +28,11 @@ class Config:
             
             # 加载报告类型配置
             self.report_types = config.get('report_types', ["github", "hacker_news"])  # 默认报告类型
+
+            # 自定义站点配置
+            custom_sites_config = config.get('custom_sites', {})
+            self.custom_sites = custom_sites_config.get('enabled_sites', ["zhihu", "juejin"])
+            self.custom_sites_interval_hours = custom_sites_config.get('crawl_interval_hours', 6)
             
             # 加载 Slack 配置
             slack_config = config.get('slack', {})

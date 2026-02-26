@@ -20,6 +20,19 @@ class ReportGenerator:
             with open(prompt_file, "r", encoding='utf-8') as file:
                 self.prompts[report_type] = file.read()
 
+    def _get_prompt(self, report_type: str) -> str:
+        """获取提示词；若未预加载则按需加载。"""
+        if report_type in self.prompts:
+            return self.prompts[report_type]
+
+        prompt_file = f"prompts/{report_type}_{self.llm.model}_prompt.txt"
+        if not os.path.exists(prompt_file):
+            raise FileNotFoundError(f"提示文件未找到: {prompt_file}")
+
+        with open(prompt_file, "r", encoding="utf-8") as file:
+            self.prompts[report_type] = file.read()
+        return self.prompts[report_type]
+
     def generate_github_report(self, markdown_file_path):
         """
         生成 GitHub 项目的报告，并保存为 {original_filename}_report.md。
@@ -27,7 +40,7 @@ class ReportGenerator:
         with open(markdown_file_path, 'r') as file:
             markdown_content = file.read()
 
-        system_prompt = self.prompts.get("github")
+        system_prompt = self._get_prompt("github")
         report = self.llm.generate_report(system_prompt, markdown_content)
         
         report_file_path = os.path.splitext(markdown_file_path)[0] + "_report.md"
@@ -44,7 +57,7 @@ class ReportGenerator:
         with open(markdown_file_path, 'r') as file:
             markdown_content = file.read()
 
-        system_prompt = self.prompts.get("hacker_news_hours_topic")
+        system_prompt = self._get_prompt("hacker_news_hours_topic")
         report = self.llm.generate_report(system_prompt, markdown_content)
         
         report_file_path = os.path.splitext(markdown_file_path)[0] + "_topic.md"
@@ -60,7 +73,7 @@ class ReportGenerator:
         这里的输入是一个目录路径，其中包含所有由 generate_hn_topic_report 生成的 *_topic.md 文件。
         """
         markdown_content = self._aggregate_topic_reports(directory_path)
-        system_prompt = self.prompts.get("hacker_news_daily_report")
+        system_prompt = self._get_prompt("hacker_news_daily_report")
 
         base_name = os.path.basename(directory_path.rstrip('/'))
         report_file_path = os.path.join("hacker_news/tech_trends/", f"{base_name}_trends.md")
@@ -74,6 +87,23 @@ class ReportGenerator:
             report_file.write(report)
         
         LOG.info(f"Hacker News 每日汇总报告已保存到 {report_file_path}")
+        return report, report_file_path
+
+    def generate_custom_site_report(self, markdown_file_path, site_name):
+        """
+        生成自定义网站的整理报告，并保存为 {original_filename}_report.md。
+        """
+        with open(markdown_file_path, "r", encoding="utf-8") as file:
+            markdown_content = file.read()
+
+        system_prompt = self._get_prompt("custom_site")
+        report = self.llm.generate_report(system_prompt, markdown_content)
+
+        report_file_path = os.path.splitext(markdown_file_path)[0] + "_report.md"
+        with open(report_file_path, "w+", encoding="utf-8") as report_file:
+            report_file.write(report)
+
+        LOG.info(f"自定义站点 {site_name} 报告已保存到 {report_file_path}")
         return report, report_file_path
 
 

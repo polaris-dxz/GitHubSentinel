@@ -31,6 +31,18 @@ class Notifier:
             self.send_email(subject, report)
         else:
             LOG.warning("邮件设置未配置正确，无法发送 Hacker News 报告通知")
+
+    def notify_custom_site_report(self, site_name, report):
+        """
+        发送自定义站点信息整理报告邮件
+        :param site_name: 站点名称
+        :param report: 报告内容
+        """
+        if self.email_settings:
+            subject = f"[CustomSite] {site_name} 信息整理"
+            self.send_email(subject, report)
+        else:
+            LOG.warning("邮件设置未配置正确，无法发送自定义站点报告通知")
     
     def send_email(self, subject, report):
         LOG.info(f"准备发送邮件:{subject}")

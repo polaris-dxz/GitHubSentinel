@@ -20,8 +20,16 @@
     "report_types": [
         "github",
         "hacker_news_hours_topic",
-        "hacker_news_daily_report"
+        "hacker_news_daily_report",
+        "custom_site"
     ],
+    "custom_sites": {
+        "enabled_sites": [
+            "openai_blog",
+            "openai_research"
+        ],
+        "crawl_interval_hours": 6
+    },
     "slack": {
         "webhook_url": "your_slack_webhook_url"
     }
