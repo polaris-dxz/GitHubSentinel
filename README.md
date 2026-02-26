@@ -16,10 +16,10 @@ GitHub Sentinel 是一个开源的工具 AI 代理，专为开发人员和项目
 
 ### 1. 安装依赖
 
-首先，安装所需的依赖项：
+首先，确保已安装 `uv`，然后安装所需依赖：
 
 ```sh
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 ### 2. 配置应用
@@ -47,7 +47,7 @@ GitHub Sentinel 支持以下三种运行方式：
 您可以从命令行交互式地运行该应用：
 
 ```sh
-python src/command_tool.py
+uv run python src/command_tool.py
 ```
 
 在此模式下，您可以手动输入命令来管理订阅、检索更新和生成报告。
@@ -59,13 +59,13 @@ python src/command_tool.py
 1. 确保您已安装 `python-daemon` 包：
 
     ```sh
-    pip install python-daemon
+    uv pip install python-daemon
     ```
 
 2. 启动后台进程：
 
     ```sh
-    nohup python3 src/daemon_process.py > logs/daemon_process.log 2>&1 &
+    nohup uv run python src/daemon_process.py > logs/daemon_process.log 2>&1 &
     ```
 
    - 这将启动后台调度器，按照 `config.json` 中指定的间隔定期检查更新。
@@ -76,7 +76,7 @@ python src/command_tool.py
 要使用 Gradio 界面运行应用，允许用户通过 Web 界面与该工具交互：
 
 ```sh
-python src/gradio_server.py
+uv run python src/gradio_server.py
 ```
 
 - 这将在您的机器上启动一个 Web 服务器，允许您通过用户友好的界面管理订阅和生成报告。
