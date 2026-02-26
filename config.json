@@ -1,6 +1,5 @@
 {
     "github": {
-        "token": "your_github_token",
         "subscriptions_file": "subscriptions.json",
         "progress_frequency_days": 1,
         "progress_execution_time": "08:00"
